@@ -1,30 +1,33 @@
-import { ReactNode } from "react"
-import Logo from "../assets/images/filled-in.png"
+import { gql, useQuery } from "@apollo/client"
+import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons"
 import {
   Box,
-  Flex,
-  Avatar,
-  HStack,
-  Link,
-  IconButton,
   Button,
+  Flex,
+  HStack,
+  IconButton,
+  Image,
+  Link,
   Menu,
   MenuButton,
-  MenuList,
   MenuItem,
-  MenuDivider,
-  useDisclosure,
-  useColorModeValue,
+  MenuList,
   Stack,
-  Image,
+  useColorModeValue,
+  useDisclosure,
 } from "@chakra-ui/react"
-import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons"
-import { Link as RouterLink, NavLink as RouterNavLink } from "react-router-dom"
+import { ReactNode } from "react"
+import { Link as RouterLink } from "react-router-dom"
+import Logo from "../assets/images/filled-in.png"
 
 const Links = [
   {
     title: "Projects",
-    to: "/projects",
+    to: "/",
+  },
+  {
+    title: "New project",
+    to: "/projects/new",
   },
 ]
 
@@ -32,6 +35,7 @@ const NavLink = ({ children, to }: { children: ReactNode; to: string }) => (
   <Link
     px={2}
     py={1}
+    size="lg"
     rounded={"md"}
     _hover={{
       textDecoration: "none",
@@ -46,11 +50,19 @@ const NavLink = ({ children, to }: { children: ReactNode; to: string }) => (
 
 export default function Navigation() {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { loading, error, data } = useQuery(gql`
+    query {
+      me {
+        name
+      }
+    }
+  `)
 
   return (
     <>
       <Box
         position="fixed"
+        top={0}
         width="100vw"
         bg={useColorModeValue("gray.100", "gray.900")}
         px={4}
@@ -65,7 +77,9 @@ export default function Navigation() {
           />
           <HStack spacing={8} alignItems={"center"}>
             <Box>
-              <Image src={Logo} boxSize="40px" />
+              <RouterLink to="/">
+                <Image src={Logo} boxSize="40px" />
+              </RouterLink>
             </Box>
             <HStack
               as={"nav"}
@@ -83,22 +97,23 @@ export default function Navigation() {
             <Menu>
               <MenuButton
                 as={Button}
-                rounded={"full"}
-                variant={"link"}
+                // rounded={"full"}
+                // variant={"link"}
+                bg="gray.200"
                 cursor={"pointer"}
               >
-                <Avatar
-                  size={"sm"}
-                  src={
-                    "https://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9"
-                  }
-                />
+                {!loading && !error && data.me.name}
+                {/* <Avatar size={"sm"} src={"https://gravatar.com/avatar/1"} /> */}
               </MenuButton>
               <MenuList>
-                <MenuItem>Link 1</MenuItem>
+                {/* <MenuItem>Link 1</MenuItem>
                 <MenuItem>Link 2</MenuItem>
-                <MenuDivider />
-                <MenuItem>Link 3</MenuItem>
+                <MenuDivider /> */}
+                <MenuItem>
+                  <Link width="100%" as={RouterLink} to="/logout">
+                    Logout
+                  </Link>
+                </MenuItem>
               </MenuList>
             </Menu>
           </Flex>

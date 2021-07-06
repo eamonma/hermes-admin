@@ -3,16 +3,16 @@ import React, { useState, createContext, ReactChild } from "react"
 export const AppContext = createContext({} as any)
 
 export const AppProvider = (props: { children: ReactChild }) => {
-  const [authenticated, setAuthenticated] = useState(false)
+  const [authenticated, setAuthenticated] = useState(true)
   const [token, setToken] = useState("")
-  const [user, setUser] = useState({})
+  const [refreshToken, setRefreshToken] = useState("")
 
   return (
     <AppContext.Provider
       value={{
         authenticated: [authenticated, setAuthenticated],
         token: [token, setToken],
-        user: [user, setUser],
+        refreshToken: [refreshToken, setRefreshToken],
       }}
     >
       {props.children}
