@@ -1,36 +1,31 @@
-import React, { Fragment, useContext, useEffect, useRef } from "react"
-// import "./App.css"
-import "@vime/core/themes/default.css"
-import { Button } from "@chakra-ui/react"
-import { BrowserRouter as Router } from "react-router-dom"
-import { Route, Switch } from "react-router"
-import Login from "./components/Login"
-import Navigation from "./components/Navigation"
-
 import {
   ApolloClient,
-  InMemoryCache,
-  ApolloProvider,
-  useQuery,
-  gql,
   ApolloLink,
+  ApolloProvider,
   createHttpLink,
+  InMemoryCache,
 } from "@apollo/client"
-
 import { setContext } from "@apollo/client/link/context"
+// import "./App.css"
+import "@vime/core/themes/default.css"
+import React, { useContext, useEffect } from "react"
+import { Route, Switch } from "react-router"
+import { BrowserRouter as Router } from "react-router-dom"
 import { AppContext, AppProvider } from "./AppContext"
-import Me from "./components/Me"
-import Projects from "./components/Projects"
-import PrivateRoute from "./components/PrivateRoute"
-import Logout from "./components/Logout"
 import EditProject from "./components/EditProject"
+import Login from "./components/Login"
+import Logout from "./components/Logout"
+import Me from "./components/Me"
+import Navigation from "./components/Navigation"
 import NewProject from "./components/NewProject"
+import PrivateRoute from "./components/PrivateRoute"
+import Projects from "./components/Projects"
 
 const setAuthLink = setContext(() => {})
 
 const App = () => {
   return (
-    <Router>
+    <Router basename="/dashboard">
       <AppProvider>
         <AppRouter />
       </AppProvider>

@@ -1,28 +1,23 @@
 import { gql, useQuery } from "@apollo/client"
 import { ChevronRightIcon } from "@chakra-ui/icons"
 import {
-  Box,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   Flex,
   Heading,
-  HStack,
   Input,
   SimpleGrid,
   Skeleton,
   Text,
 } from "@chakra-ui/react"
-import { faFileCode } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import React, { Fragment, useCallback } from "react"
-import { useDropzone } from "react-dropzone"
+import React, { Fragment } from "react"
 import { Link as RouterLink, useParams } from "react-router-dom"
 import Dropzone from "./Dropzone"
+import FileListItem from "./FileListItem"
 
 const EditProject = () => {
   const { id } = useParams() as any
-
   const { loading, error, data, refetch } = useQuery(
     gql`
       query Project($id: String!) {
@@ -34,6 +29,7 @@ const EditProject = () => {
             id
             name
             mime
+            size
             key
           }
         }
@@ -41,6 +37,8 @@ const EditProject = () => {
     `,
     { variables: { id } }
   )
+
+  console.log(error)
 
   return (
     <Flex height="100vh" mt={12} width="100vw">
@@ -66,7 +64,8 @@ const EditProject = () => {
               <Skeleton isLoaded={!loading}>
                 {loading
                   ? "project filler text"
-                  : data.getProject.name + " (" + data.getProject.client + ")"}
+                  : data &&
+                    data.getProject.name + " (" + data.getProject.client + ")"}
               </Skeleton>
             </BreadcrumbLink>
           </BreadcrumbItem>
@@ -95,13 +94,7 @@ const EditProject = () => {
               {loading
                 ? "text"
                 : data.getProject.files.map((file: any) => (
-                    <HStack mt={6} mb={6} spacing={6} key={file.id}>
-                      <FontAwesomeIcon icon={faFileCode} />
-                      <Text fontSize="lg">{file.name}</Text>
-                      <Text fontSize="lg" color="gray.500">
-                        {file.mime}
-                      </Text>
-                    </HStack>
+                    <FileListItem file={file} refetch={refetch} />
                   ))}
               {!loading && (
                 <Dropzone

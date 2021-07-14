@@ -72,7 +72,7 @@ const Projects = () => {
           {/* <TableCaption>Imperial to metric conversion factors</TableCaption> */}
           <Thead>
             <Tr>
-              {/* <Th>Created on</Th> */}
+              <Th>Created on</Th>
               <Th>Client</Th>
               <Th>Project</Th>
               <Th></Th>
@@ -111,7 +111,7 @@ const Projects = () => {
                   return <Fragment key={id}></Fragment>
                 return (
                   <Tr key={id}>
-                    {/* <Td>{new Date(createdAt).toLocaleDateString()}</Td> */}
+                    <Td>{new Date(createdAt).toLocaleDateString()}</Td>
                     <Td>
                       <Text isTruncated>{client}</Text>
                     </Td>
@@ -127,7 +127,7 @@ const Projects = () => {
                           history.push(`/projects/${id}`)
                         }}
                       >
-                        Edit
+                        View
                       </Button>
                     </Td>
                     <Td>

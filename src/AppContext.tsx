@@ -3,7 +3,10 @@ import React, { useState, createContext, ReactChild } from "react"
 export const AppContext = createContext({} as any)
 
 export const AppProvider = (props: { children: ReactChild }) => {
-  const [authenticated, setAuthenticated] = useState(true)
+  let auth: boolean = JSON.parse(
+    localStorage.getItem("authenticated") as string
+  ) as boolean
+  const [authenticated, setAuthenticated] = useState(auth)
   const [token, setToken] = useState("")
   const [refreshToken, setRefreshToken] = useState("")
 

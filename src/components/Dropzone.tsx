@@ -1,5 +1,5 @@
 import { gql, useMutation } from "@apollo/client"
-import { Box, Progress } from "@chakra-ui/react"
+import { Box, HStack, Progress, Spinner } from "@chakra-ui/react"
 import Axios from "axios"
 import mime from "mime-types"
 import { normalize } from "normalize-diacritics"
@@ -19,8 +19,13 @@ const objectSum = (obj: any) => {
   return sum
 }
 
+const cleanupString = async (str: string) => {
+  return (await normalize(str)).replaceAll(" ", "_").toLowerCase()
+}
+
 const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
   const [uploading, setUploading] = useState(false)
+  const [finishingUp, setFinishingUp] = useState(false)
 
   const [multipartsProgress, setMultipartsProgress] = useState({})
   const [multipartsTotal, setMultipartsTotal] = useState(1)
@@ -47,40 +52,18 @@ const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
         const blob =
           index < keys.length ? file.slice(start, end) : file.slice(start)
 
-        // const totals = [...(multipartsTotal as Array<any>)]
-
-        // totals[index] = blob.size
         setMultipartsProgress({
           ...multipartsProgress,
           [index]: 0,
         })
 
-        // console.log(totals)
-
         promises.push(
           axios.put(urls[index], blob, {
             onUploadProgress: (progressEvent) => {
-              console.log(index)
-
-              // console.log((progressEvent.loaded / progressEvent.total) * 100)
-              // const progresses = console.log(progresses, index)
-              // console.log(progressEvent)
-
               setMultipartsProgress((prev) => ({
                 ...prev,
                 [index]: progressEvent.loaded,
               }))
-
-              // console.log(multipartsProgress)
-
-              // console.log(progresses)
-
-              // console.log(
-              //   multipartsProgress?.reduce((accum, curr) => accum + curr, 0) /
-              //     multipartsTotal?.reduce((accum, curr) => accum + curr, 0),
-              //   multipartsProgress,
-              //   multipartsTotal
-              // )
             },
           })
         )
@@ -96,7 +79,7 @@ const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
     [multipartsProgress]
   )
 
-  const [signedUpload, { data }] = useMutation(gql`
+  const [signedUpload] = useMutation(gql`
     mutation SignUploadUrls($parts: Int!, $key: String!) {
       signUploadUrls(parts: $parts, key: $key) {
         UploadId
@@ -121,19 +104,26 @@ const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
       $mime: String!
       $projectId: String!
       $key: String!
+      $size: Int
     ) {
-      createFile(name: $name, mime: $mime, projectId: $projectId, key: $key) {
+      createFile(
+        name: $name
+        mime: $mime
+        projectId: $projectId
+        key: $key
+        size: $size
+      ) {
         id
       }
     }
   `)
 
-  const cleanupString = async (str: string) => {
-    return (await normalize(str)).replaceAll(" ", "_").toLowerCase()
-  }
-
   const onDrop = useCallback(
     async (acceptedFiles) => {
+      // Upload flow:
+      // sign multipart upload urls
+      // merge multipart
+      // create file in db
       setUploading(true)
 
       const { name, client, id } = project
@@ -152,28 +142,26 @@ const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
         variables: { key, parts: partsSize },
       })
 
-      const parts = await uploadParts(
-        acceptedFiles[0],
-        signedItems.data.signUploadUrls.signedUrls
-      )
+      const { signedUrls, UploadId } = signedItems.data.signUploadUrls
+
+      const parts = await uploadParts(acceptedFiles[0], signedUrls)
 
       setUploading(false)
+      setFinishingUp(true)
 
-      const result = await completeUpload({
+      await completeUpload({
         variables: {
-          uploadId: signedItems.data.signUploadUrls.UploadId,
+          uploadId: UploadId,
           key,
           parts,
         },
       })
 
-      const file = await createFile({
-        variables: { name: fileName, mime: mimeType, projectId: id, key },
+      await createFile({
+        variables: { name: fileName, mime: mimeType, projectId: id, key, size },
       })
 
-      console.log(result)
-      console.log(file.data.id)
-
+      setFinishingUp(false)
       refetch()
     },
     [completeUpload, createFile, project, signedUpload, refetch, uploadParts]
@@ -185,6 +173,17 @@ const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
 
   return (
     <Fragment>
+      {(uploading || finishingUp) && (
+        <HStack>
+          <Progress
+            value={(objectSum(multipartsProgress) / multipartsTotal) * 100}
+            // value={56}
+            height={12}
+            w="90%"
+          />
+          {finishingUp && <Spinner ml={6} />}
+        </HStack>
+      )}
       <Box
         bg="brand.100"
         width="100%"
@@ -198,14 +197,11 @@ const Dropzone = ({ project, refetch }: { project: any; refetch: any }) => {
       >
         <input {...getInputProps()} />
         {isDragActive ? (
-          <p>Drop the files here ...</p>
+          <Progress size="lg" mt={2} mb={2} isIndeterminate />
         ) : (
-          <p>Drag 'n' drop some files here, or click to select files</p>
-        )}{" "}
+          <p>Drop file here</p>
+        )}
       </Box>
-      <Progress
-        value={(objectSum(multipartsProgress) / multipartsTotal) * 100}
-      />
     </Fragment>
   )
 }
