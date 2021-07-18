@@ -164,7 +164,7 @@ const EditProject = () => {
                       width="100%"
                       value={`${
                         process.env.NODE_ENV === "production"
-                          ? process.env.PUBLIC_URL
+                          ? "https://delivery.starlide.com/"
                           : "http://localhost:3001/"
                       }${data.getProject.shortId || "no_short_id"}${
                         showPassphrase ? `?p=${data.getProject.passphrase}` : ""
