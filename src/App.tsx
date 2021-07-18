@@ -21,8 +21,6 @@ import NewProject from "./components/NewProject"
 import PrivateRoute from "./components/PrivateRoute"
 import Projects from "./components/Projects"
 
-const setAuthLink = setContext(() => {})
-
 const App = () => {
   return (
     <Router basename="/dashboard">
@@ -68,7 +66,10 @@ const AppRouter = () => {
   })
 
   const httpLink = createHttpLink({
-    uri: "http://localhost:4000/api",
+    uri:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUBLIC_URL
+        : "http://localhost:4000/api",
   })
 
   const authLink = setContext((_, { headers }) => {

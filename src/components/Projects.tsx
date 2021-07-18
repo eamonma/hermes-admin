@@ -20,7 +20,7 @@ import { Link as RouterLink, useHistory } from "react-router-dom"
 const Projects = () => {
   const history = useHistory()
   const [filter, setFilter] = useState("")
-  const { loading, error, data } = useQuery(gql`
+  const { loading, data } = useQuery(gql`
     query {
       me {
         projects {

@@ -41,6 +41,7 @@
     "typescript": "^4.3.5",
     "web-vitals": "^1.1.2"
   },
+  "homepage": "https://delivery.starlide.com",
   "scripts": {
     "start": "craco start",
     "build": "craco build",

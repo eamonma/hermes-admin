@@ -1,27 +1,33 @@
 import { gql, useQuery } from "@apollo/client"
 import { ChevronRightIcon } from "@chakra-ui/icons"
 import {
+  Tooltip,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Checkbox,
   Flex,
   Heading,
   Input,
   SimpleGrid,
   Skeleton,
   Text,
+  useToast,
 } from "@chakra-ui/react"
-import React, { Fragment } from "react"
-import { Link as RouterLink, useParams } from "react-router-dom"
+import React, { Fragment, useState } from "react"
+import { Link as RouterLink, Redirect, useParams } from "react-router-dom"
 import Dropzone from "./Dropzone"
 import FileListItem from "./FileListItem"
 
 const EditProject = () => {
   const { id } = useParams() as any
+  const toast = useToast()
+  const [showPassphrase, setShowPassphrase] = useState(false)
   const { loading, error, data, refetch } = useQuery(
     gql`
       query Project($id: String!) {
         getProject(id: $id, clientRequesting: false) {
+          shortId
           name
           client
           passphrase
@@ -39,6 +45,8 @@ const EditProject = () => {
   )
 
   console.log(error)
+
+  if ((!data && !loading) || error) return <Redirect to="/" />
 
   return (
     <Flex height="100vh" mt={12} width="100vw">
@@ -109,19 +117,87 @@ const EditProject = () => {
             </Skeleton>
           </Flex>
           <Flex spacing={8} width="100%">
-            <Skeleton isLoaded={!loading}>
+            <Skeleton isLoaded={!loading} width="100%">
               {!loading && (
                 <Fragment>
-                  {" "}
-                  <Heading mb={3} as="h3" size="lg">
-                    Passphrase
+                  <Heading mb={5} as="h3" size="lg">
+                    Share
                   </Heading>
-                  <Input
-                    isReadOnly
-                    value={data.getProject.passphrase
-                      .match(/.{1,4}/g)
-                      .join("-")}
-                  />
+                  <Checkbox
+                    isChecked={showPassphrase}
+                    onChange={(e) => setShowPassphrase((prev) => !prev)}
+                    mb={2}
+                  >
+                    Include passphrase
+                  </Checkbox>
+                  <Tooltip label={`Click to copy, control-click to open`}>
+                    <Input
+                      isReadOnly
+                      onClick={async (e) => {
+                        if (e.metaKey || e.ctrlKey) {
+                          window.open(
+                            (e.target as HTMLInputElement).value,
+                            "_blank"
+                          )
+
+                          return toast({
+                            title: "Opened in new tab",
+                            status: "success",
+                            isClosable: true,
+                            duration: 2000,
+                          })
+                        }
+                        await navigator.clipboard.writeText(
+                          (e.target as HTMLInputElement).value
+                        )
+
+                        toast({
+                          title: "Copied to clipboard!",
+                          status: "success",
+                          isClosable: true,
+                          duration: 900,
+                        })
+                      }}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                      width="100%"
+                      value={`${
+                        process.env.NODE_ENV === "production"
+                          ? process.env.PUBLIC_URL
+                          : "http://localhost:3001/"
+                      }${data.getProject.shortId || "no_short_id"}${
+                        showPassphrase ? `?p=${data.getProject.passphrase}` : ""
+                      }`}
+                    />
+                  </Tooltip>
+                  <Heading mt={8} mb={3} as="h3" size="lg">
+                    Passphrase
+                  </Heading>{" "}
+                  <Tooltip label={`Click to copy`}>
+                    <Input
+                      isReadOnly
+                      onClick={async (e) => {
+                        await navigator.clipboard.writeText(
+                          (e.target as HTMLInputElement).value
+                        )
+
+                        toast({
+                          title: "Copied to clipboard!",
+                          status: "success",
+                          isClosable: true,
+                          duration: 900,
+                        })
+                      }}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                      width="auto"
+                      value={data.getProject.passphrase
+                        .match(/.{1,4}/g)
+                        .join("-")}
+                    />
+                  </Tooltip>
                 </Fragment>
               )}
             </Skeleton>

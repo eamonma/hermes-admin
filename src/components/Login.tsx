@@ -75,7 +75,7 @@ const Login = () => {
   const history = useHistory()
   if (authenticated) history.push("/")
 
-  const [login, { data }] = useMutation(gql`
+  const [login] = useMutation(gql`
     mutation ($email: String!, $password: String!) {
       login(email: $email, password: $password) {
         id

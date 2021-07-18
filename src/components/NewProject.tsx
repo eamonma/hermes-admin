@@ -12,6 +12,7 @@ import {
   Input,
   InputGroup,
   Text,
+  useToast,
 } from "@chakra-ui/react"
 import { Field, Form, Formik } from "formik"
 import React from "react"
@@ -34,13 +35,15 @@ const Me = () => {
 
   const history = useHistory()
 
-  const [createProject, { data }] = useMutation(gql`
+  const [createProject] = useMutation(gql`
     mutation ($name: String!, $client: String!) {
       createProject(name: $name, client: $client) {
         id
       }
     }
   `)
+
+  const toast = useToast()
 
   return (
     <Flex height="100vh" mt={12} width="100vw">
@@ -82,7 +85,14 @@ const Me = () => {
 
             actions.setSubmitting(false)
 
-            if (res.data) history.push(`/projects/${res.data.createProject.id}`)
+            if (res.data) {
+              toast({
+                title: "Project created",
+                status: "success",
+                isClosable: true,
+              })
+              history.push(`/projects/${res.data.createProject.id}`)
+            }
           }}
         >
           {(props) => (
@@ -93,14 +103,15 @@ const Me = () => {
                     mb={6}
                     isInvalid={form.errors.name && form.touched.name}
                   >
-                    <FormLabel htmlFor="name">Name</FormLabel>
+                    <FormLabel htmlFor="name">Project name</FormLabel>
                     <InputGroup>
                       <Input
                         // bg="white"
                         {...field}
                         id="name"
+                        autoFocus
                         textAlign="left"
-                        placeholder=""
+                        placeholder="June 4 Concert"
                         variant="outline"
                       />
                     </InputGroup>
@@ -123,9 +134,9 @@ const Me = () => {
                     </Flex>
                     <Input
                       {...field}
-                      id="password"
+                      id="client"
                       textAlign="left"
-                      placeholder=""
+                      placeholder="CYO"
                       variant="outline"
                     />
                   </FormControl>

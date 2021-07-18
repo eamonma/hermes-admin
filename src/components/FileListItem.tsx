@@ -1,10 +1,8 @@
 import { gql, useMutation } from "@apollo/client"
 import {
-  Box,
   Button,
   ButtonGroup,
   Flex,
-  HStack,
   Popover,
   PopoverArrow,
   PopoverCloseButton,
@@ -13,7 +11,7 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Text,
-  useDisclosure,
+  useToast,
 } from "@chakra-ui/react"
 import { faFileCode } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -22,6 +20,7 @@ import React, { Fragment, useRef, useState } from "react"
 
 const FileListItem = ({ file, refetch }: { file: any; refetch: any }) => {
   const [deleting, setDeleting] = useState(false)
+  const [loadingURL, setLoadingURL] = useState(false)
   const [removeFile] = useMutation(gql`
     mutation deleteFile($id: String!) {
       deleteFile(id: $id)
@@ -34,7 +33,7 @@ const FileListItem = ({ file, refetch }: { file: any; refetch: any }) => {
     }
   `)
 
-  const { onClose } = useDisclosure()
+  const toast = useToast()
 
   const initRef = useRef<HTMLButtonElement>(null)
 
@@ -52,13 +51,16 @@ const FileListItem = ({ file, refetch }: { file: any; refetch: any }) => {
         <Text fontSize="lg" ml={3}>
           <Button
             variant="outline"
+            isLoading={loadingURL}
             onClick={async () => {
+              setLoadingURL(true)
               const url = await signFileUrl({
                 variables: {
                   id: file.id,
                 },
               })
               window.location.href = url.data.signFileUrl
+              setLoadingURL(false)
             }}
           >
             {file.name}
@@ -81,7 +83,11 @@ const FileListItem = ({ file, refetch }: { file: any; refetch: any }) => {
                   Delete
                 </Button>
               </PopoverTrigger>
-              <PopoverContent>
+              <PopoverContent
+                style={{
+                  boxShadow: "1px 1px 18px -10px rgba(1,1,1,0.5)",
+                }}
+              >
                 <PopoverArrow />
                 <PopoverCloseButton />
                 <PopoverHeader>Are you sure?</PopoverHeader>
@@ -101,6 +107,11 @@ const FileListItem = ({ file, refetch }: { file: any; refetch: any }) => {
                         })
                         await refetch()
                         setDeleting(false)
+                        toast({
+                          title: `${file.name} deleted`,
+                          status: "success",
+                          isClosable: true,
+                        })
                       }}
                       isLoading={deleting}
                     >
