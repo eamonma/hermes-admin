@@ -68,7 +68,7 @@ const AppRouter = () => {
   const httpLink = createHttpLink({
     uri:
       process.env.NODE_ENV === "production"
-        ? process.env.PUBLIC_URL
+        ? "https://delivery.starlide.com/api"
         : "http://localhost:4000/api",
   })
 
